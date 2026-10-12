@@ -18,4 +18,4 @@ from .vehicle import Vehicle
 from .models import CPModel, ExpModel, BiExpModel, DisproportionateModel
 from .rider import Rider
 from .optimiser import Optimiser, OptimisationResult
-from .plotting import plot, paper_style
+from .plotting import plot

@@ -33,19 +33,17 @@ DATASET_STYLES = [
      'watts':       dict(color='blue', linestyle='-')},
 ]
 
-def paper_style():
-    plt.rcParams.update({
-        "text.usetex": False,
-        "mathtext.fontset": "cm",
-        "font.family": "serif",
-        "font.serif": ["cmr10", "Computer Modern Roman", "DejaVu Serif"],
-        "axes.formatter.use_mathtext": True,
-        "axes.spines.top": False,
-        "axes.grid": True,
-        "grid.alpha": 0.3,
-        "font.size": 27,
-    })
-
+plt.rcParams.update({
+    "text.usetex": False,
+    "mathtext.fontset": "cm",
+    "font.family": "serif",
+    "font.serif": ["cmr10", "Computer Modern Roman", "DejaVu Serif"],
+    "axes.formatter.use_mathtext": True,
+    "axes.spines.top": False,
+    "axes.grid": True,
+    "grid.alpha": 0.3,
+    "font.size": 27,
+})
 
 def _plot_series(ax1, ax2, run, series, style, labels, suffix):
     """Plot the requested series from one run. Returns the Line2D handles."""

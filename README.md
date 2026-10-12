@@ -175,9 +175,7 @@ hv.plot(result.run, attempt_sim,
         savefig="overlay.pdf")
 ```
 
-`savefig` writes both a PDF and a PNG. `hv.paper_style()` sets the matplotlib
-style used for the paper figures. It changes global matplotlib settings, so it
-is not applied on import.
+`savefig` writes both a PDF and a PNG.
 
 ## Adding a physiological model
 
