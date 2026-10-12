@@ -1,4 +1,4 @@
-# hpvopt
+# HPV-optimisation
 
 A general tool-kit for human powered vehicle development.
 
