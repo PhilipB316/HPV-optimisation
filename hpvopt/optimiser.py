@@ -105,7 +105,7 @@ class Optimiser:
             index += 1
             step_energy_produced = 0.5 * (p_prev + p) * \
                 self.dt * vehicle.drive_train_efficiency
-            step_energy_consumed = vehicle.total_power_consumed(current_speed) * self.dt
+            step_energy_consumed = vehicle.total_power_consumedq(current_speed) * self.dt
             current_energy += (step_energy_produced - step_energy_consumed)
             if current_energy < 0:
                 current_energy = 0

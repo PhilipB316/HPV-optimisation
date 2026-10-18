@@ -126,11 +126,16 @@ class Vehicle:
         kinetic_energy_demon = (0.5 * total_mass + 0.25 * self.number_of_wheels * self.wheel_mass)
         return np.sqrt(kinetic_energy / kinetic_energy_demon) * 3.6
 
-    def calculate_speeds(self, times, watts):
+    def calculate_speeds(self, times, watts, initial_speed=0.0):
         """
         Calculates the speed of the vehicle in km/hr through all time in 'times' array
         Returns len(times) - 1 speeds, one per step between samples.
         """
+        effective_mass = 0.5*(self.rider_mass+self.bike_mass) + \
+            0.25*self.number_of_wheels*self.wheel_mass
+        current_speed = initial_speed
+        current_energy = effective_mass * (initial_speed/3.6)**2
+
         time_step = times[1] - times[0]
         current_speed = 0
         current_energy = 0
@@ -162,7 +167,7 @@ class Vehicle:
         sim.calc_speeds = np.array(self.calculate_speeds(run.times, run.watts))
         return sim
 
-    def fit(self, runs, free=('cda', 'crr', 'air_density'), bounds=None):
+    def fit(self, runs, free=('cda', 'crr'), bounds=None):
         """Fit vehicle parameters to measured speed.
 
         Args:
@@ -176,22 +181,25 @@ class Vehicle:
         Example:
             fitted = vehicle.fit([run1, run2], free=("cda", "crr"))
         """
-        bounds = BOUNDS
+        bounds = {**BOUNDS, **(bounds or {})}
+        targets = []
+        for run in runs:
+            speeds = np.asarray(run.speeds, float)
+            targets.append(speeds)
 
         def objective(params):
             total_squared_error = 0
             total_count = 0
-            for run in runs:
+            for run, speeds in zip(runs, targets):
                 vehicle = replace(self, **dict(zip(free, params)))
                 if run.rider_mass is not None:
                     vehicle = replace(vehicle, rider_mass=run.rider_mass)
-                sim_speeds = vehicle.calculate_speeds(run.times, run.watts)
-                recorded_speeds = run.speeds[:-1]
-                min_len = min(len(sim_speeds), len(recorded_speeds))
-                error = np.sum((np.array(sim_speeds[:min_len]) -
-                    np.array(recorded_speeds[:min_len])) ** 2)
-                total_squared_error += error
-                total_count += min_len
+                sim = np.array(vehicle.calculate_speeds(run.times, run.watts,
+                                                        initial_speed=speeds[0]))
+                rec = speeds[1:]
+                n = min(len(sim), len(rec))
+                total_squared_error += np.sum((sim[:n] - rec[:n]) ** 2)
+                total_count += n
             return np.sqrt(total_squared_error / total_count)
 
         initial_guess = [getattr(self, k) for k in free]

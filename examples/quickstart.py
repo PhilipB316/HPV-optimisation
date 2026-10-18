@@ -21,7 +21,7 @@ mmp_watts = [1288, 1278, 1268, 1218, 792, 558, 477, 296, 244, 242, 228, 220, 204
 vehicle = hv.Vehicle(rider_mass=80, bike_mass=55, cda=0.030, crr=0.008,
                      air_density=1.1, slope=-1 / 150, wind=4 / 3.6)
 
-run = hv.Run("../../../data/20261008_Clint_KakahiShell.tcx", start=2890, end=3100)
+run = hv.Run("../../data/20261008_Clint_KakahiShell.tcx", start=2890, end=3100)
 sim = vehicle.simulate(run)
 sim.plot()
 

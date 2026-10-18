@@ -1,22 +1,8 @@
-# Copyright (C) 2026 Philip Brand
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 import copy
 import os
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from scipy.ndimage import uniform_filter1d
 import numpy as np
 
 from . import plotting
@@ -81,7 +67,8 @@ class Run:
         distances, cadences: from the TCX file only.
     """
 
-    def __init__(self, path=None, start=None, end=None, label=None, rider_mass=None):
+    def __init__(self, path=None, start=None, end=None, label=None,
+                 rider_mass=None, smooth_window=None):
         """Load a run from a file.
 
         Args:
@@ -99,7 +86,7 @@ class Run:
         for key in SERIES:
             setattr(self, key, None)
         self.label = label or (os.path.basename(path) if path else "Run")
-        self.rider_mass = rider_mass  # used by Vehicle.fit if set
+        self.rider_mass = rider_mass
         if path is None:
             return
 
@@ -112,6 +99,9 @@ class Run:
             raise ValueError(f"Unsupported file type '{ext}'. Expected .tcx or .npz")
         for key, values in data.items():
             setattr(self, key, np.array(values))
+
+        if smooth_window and self.speeds is not None:
+            self.speeds = uniform_filter1d(self.speeds.astype(float), smooth_window)
 
         if start is not None or end is not None:
             self.__dict__.update(self.slice(start, end).__dict__)

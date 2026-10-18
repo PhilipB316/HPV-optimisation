@@ -42,7 +42,7 @@ plt.rcParams.update({
     "axes.spines.top": False,
     "axes.grid": True,
     "grid.alpha": 0.3,
-    "font.size": 27,
+    "font.size": 12,
 })
 
 def _plot_series(ax1, ax2, run, series, style, labels, suffix):
