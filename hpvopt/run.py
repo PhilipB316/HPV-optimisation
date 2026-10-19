@@ -171,6 +171,12 @@ class Run:
         np.savez(path, **{k: getattr(self, k) for k in SERIES \
             if getattr(self, k) is not None})
 
+    def to_csv(self, path):
+        """Write all available series to a CSV file, one column per series."""
+        cols = [k for k in SERIES if getattr(self, k) is not None]
+        data = np.column_stack([getattr(self, k) for k in cols])
+        np.savetxt(path, data, delimiter=",", header=",".join(cols), comments="")
+
     def plot(self, *others, **kwargs):
         """Plot this run, optionally overlaid with other runs.
 

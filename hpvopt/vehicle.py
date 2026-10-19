@@ -16,7 +16,8 @@
 import math, copy
 import numpy as np
 from dataclasses import dataclass, replace
-from scipy.optimize import minimize
+from scipy.optimize import minimize, least_squares
+
 
 BOUNDS = {'crr': (0.001, 0.2), 'cda': (0.01, 0.9), 'air_density': (0.8, 2.0)}
 
@@ -131,25 +132,17 @@ class Vehicle:
         Calculates the speed of the vehicle in km/hr through all time in 'times' array
         Returns len(times) - 1 speeds, one per step between samples.
         """
-        effective_mass = 0.5*(self.rider_mass+self.bike_mass) + \
-            0.25*self.number_of_wheels*self.wheel_mass
-        current_speed = initial_speed
-        current_energy = effective_mass * (initial_speed/3.6)**2
-
-        time_step = times[1] - times[0]
-        current_speed = 0
-        current_energy = 0
+        m_eff = 0.5*(self.rider_mass + self.bike_mass) + 0.25*self.number_of_wheels*self.wheel_mass
+        energy = m_eff * (initial_speed/3.6)**2
+        speed = initial_speed
+        dts = np.diff(times)
         calc_speeds = []
-        for i in range(len(times) - 1):
-            step_energy_produced = 0.5 * (watts[i] + watts[i+1]) * time_step * self.drive_train_efficiency
-            step_energy_consumed = self.total_power_consumed(current_speed) * time_step
-            current_energy += (step_energy_produced - step_energy_consumed)
-            if current_energy < 0:
-                current_energy = 0
-            if i > 0 and (times[i] - times[i-1]) > time_step:
-                current_energy = 0
-            current_speed = self.current_speed_from_energy(current_energy)
-            calc_speeds.append(current_speed)
+        for i, dt in enumerate(dts):
+            produced = 0.5*(watts[i] + watts[i+1]) * dt * self.drive_train_efficiency
+            consumed = self.total_power_consumed(speed) * dt
+            energy = max(energy + produced - consumed, 0.0)
+            speed = self.current_speed_from_energy(energy)
+            calc_speeds.append(speed)
         return calc_speeds
 
     def simulate(self, run):
@@ -167,44 +160,69 @@ class Vehicle:
         sim.calc_speeds = np.array(self.calculate_speeds(run.times, run.watts))
         return sim
 
-    def fit(self, runs, free=('cda', 'crr'), bounds=None):
-        """Fit vehicle parameters to measured speed.
+    # def fit(self, runs, free=('cda', 'crr'), bounds=None):
+    #     """Fit vehicle parameters to measured speed.
+    #
+    #     Args:
+    #         runs: list of Run objects with measured `speeds`.
+    #         free: names of the parameters to fit.
+    #         bounds: dict of name -> (low, high), overriding the defaults.
+    #
+    #     Returns:
+    #         A new Vehicle with the fitted parameters. The original is unchanged.
+    #
+    #     Example:
+    #         fitted = vehicle.fit([run1, run2], free=("cda", "crr"))
+    #     """
+    #     bounds = {**BOUNDS, **(bounds or {})}
+    #     targets = []
+    #     for run in runs:
+    #         speeds = np.asarray(run.speeds, float)
+    #         targets.append(speeds)
+    #
+    #     def objective(params):
+    #         total_squared_error = 0
+    #         total_count = 0
+    #         for run, speeds in zip(runs, targets):
+    #             vehicle = replace(self, **dict(zip(free, params)))
+    #             if run.rider_mass is not None:
+    #                 vehicle = replace(vehicle, rider_mass=run.rider_mass)
+    #             sim = np.array(vehicle.calculate_speeds(run.times, run.watts,
+    #                                                     initial_speed=speeds[0]))
+    #             rec = speeds[1:]
+    #             n = min(len(sim), len(rec))
+    #             total_squared_error += np.sum((sim[:n] - rec[:n]) ** 2)
+    #             total_count += n
+    #         return np.sqrt(total_squared_error / total_count)
+    #
+    #     initial_guess = [getattr(self, k) for k in free]
+    #     result = minimize(objective, initial_guess,
+    #                       bounds=[bounds.get(k, (None, None)) for k in free],
+    #                       method='L-BFGS-B')
+    #     return replace(self, **dict(zip(free, result.x)))
 
-        Args:
-            runs: list of Run objects with measured `speeds`.
-            free: names of the parameters to fit.
-            bounds: dict of name -> (low, high), overriding the defaults.
-
-        Returns:
-            A new Vehicle with the fitted parameters. The original is unchanged.
-
-        Example:
-            fitted = vehicle.fit([run1, run2], free=("cda", "crr"))
-        """
+    def fit(self, runs, free=('cda', 'crr'), bounds=None, loss='soft_l1', f_scale=0.5):
         bounds = {**BOUNDS, **(bounds or {})}
-        targets = []
-        for run in runs:
-            speeds = np.asarray(run.speeds, float)
-            targets.append(speeds)
+        x0 = np.array([getattr(self, k) for k in free], float)
+        scale = x0.copy()                                   # optimise u = p / scale  (~1)
+        lo = np.array([bounds[k][0] for k in free]) / scale
+        hi = np.array([bounds[k][1] for k in free]) / scale
 
-        def objective(params):
-            total_squared_error = 0
-            total_count = 0
-            for run, speeds in zip(runs, targets):
-                vehicle = replace(self, **dict(zip(free, params)))
-                if run.rider_mass is not None:
-                    vehicle = replace(vehicle, rider_mass=run.rider_mass)
-                sim = np.array(vehicle.calculate_speeds(run.times, run.watts,
-                                                        initial_speed=speeds[0]))
-                rec = speeds[1:]
-                n = min(len(sim), len(rec))
-                total_squared_error += np.sum((sim[:n] - rec[:n]) ** 2)
-                total_count += n
-            return np.sqrt(total_squared_error / total_count)
+        def residuals(u):
+            veh = replace(self, **dict(zip(free, u * scale)))
+            out = []
+            for run in runs:
+                v = replace(veh, rider_mass=run.rider_mass) if run.rider_mass is not None else veh
+                speeds = np.asarray(run.speeds, float)
+                sim = np.array(v.calculate_speeds(run.times, run.watts, initial_speed=speeds[0]))
+                n = min(len(sim), len(speeds) - 1)
+                out.append(sim[:n] - speeds[1:n+1])
+            return np.concatenate(out)
 
-        initial_guess = [getattr(self, k) for k in free]
-        result = minimize(objective, initial_guess,
-                          bounds=[bounds.get(k, (None, None)) for k in free],
-                          method='L-BFGS-B')
-        return replace(self, **dict(zip(free, result.x)))
+        sol = least_squares(residuals, x0 / scale, bounds=(lo, hi),
+                            loss=loss, f_scale=f_scale,
+                            diff_step=1e-3, x_scale=1.0,
+                            xtol=1e-10, ftol=1e-10, gtol=1e-10)
+
+        return replace(self, **dict(zip(free, sol.x * scale)))
 
