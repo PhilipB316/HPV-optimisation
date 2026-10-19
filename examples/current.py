@@ -21,14 +21,14 @@ mmp_watts = [1288, 1278, 1268, 1218, 792, 558, 477, 296, 244, 242, 228, 220, 204
 vehicle = hv.Vehicle(rider_mass=80, bike_mass=55, cda=0.030, crr=0.008,
                      air_density=1.2, slope=-0/150, wind=0)
 
-run1 = hv.Run("../../data/20261019_Clint_KakahiShell.tcx",
-              end=250, smooth_window=5)
-run2 = hv.Run("../../data/20261019_Clint_KakahiShell.tcx",
-              start=520,end=765, smooth_window=3)
-run3 = hv.Run("../../data/20261019_Clint_KakahiShell_02.tcx",
-              start=200, end=423, smooth_window=5)
-run4 = hv.Run("../../data/20261019_Clint_KakahiShell_02.tcx",
+run1 = hv.Run("../../data/20261019_Clint_KakahiShell_02.tcx",
+              start=200, end=423, smooth_window=3)
+run2 = hv.Run("../../data/20261019_Clint_KakahiShell_02.tcx",
               start=920, end=1192, smooth_window=3)
+run3 = hv.Run("../../data/20261019_Clint_KakahiShell.tcx",
+              end=250, smooth_window=3)
+run4 = hv.Run("../../data/20261019_Clint_KakahiShell.tcx",
+              start=520,end=765, smooth_window=3)
 
 # sim = vehicle.simulate(run1)
 # sim.plot()
@@ -36,15 +36,17 @@ run4 = hv.Run("../../data/20261019_Clint_KakahiShell_02.tcx",
 # sim.plot()
 
 fitted_vehicle = vehicle.fit([run1, run2, run3, run4])
-# fitted_vehicle.slope=-20/5000
-# fitted_vehicle.bike_mass = 25
-# fitted_vehicle.wind = 1.6
-# fitted_vehicle.cda = 0.03
+# fitted_vehicle = fitted_vehicle.fit([run1, run2, run4], free=('cda',))
+fitted_vehicle = fitted_vehicle.fit([run4], free=('cda',))
 
 print(fitted_vehicle)
 print("power at 100 km/hr")
 print(fitted_vehicle.total_power_consumed(100))
 
-sim = fitted_vehicle.simulate(run2)
-sim.plot()
+fitted_vehicle.simulate(run1).plot()
+fitted_vehicle.simulate(run2).plot()
+fitted_vehicle.simulate(run3).plot()
+fitted_vehicle.simulate(run4).plot()
 
+run3.to_csv("../../data/run3.csv")
+run4.to_csv("../../data/run4.csv")
