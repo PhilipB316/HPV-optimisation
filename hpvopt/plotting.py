@@ -126,7 +126,7 @@ def plot(*runs, series=None, labels=None, show=True, savefig=None):
     if savefig:
         root = os.path.splitext(savefig)[0]
         plt.savefig(root + '.pdf')
-        plt.savefig(root + '.png')
+        plt.savefig(root + '.png', transparent=True)
 
     if show:
         plt.show()

@@ -35,7 +35,7 @@ kakahi = vehicle.fit([run1, run2, run3, run4])
 print(kakahi)
 print("Power at 100 km/hr:", kakahi.total_power_consumed(100))
 
-kakahi.simulate(run1).plot()
+kakahi.simulate(run1).plot(savefig="../docs/fit.png")
 kakahi.simulate(run2).plot()
 kakahi.simulate(run3).plot()
 kakahi.simulate(run4).plot()
