@@ -44,7 +44,7 @@ import hpvopt as hv
 ### Load data
 
 ```python
-run = hv.Run("ride.tcx", start=450, end=950)
+run = hv.Run("ride.tcx", start=450, end=950, smooth_window=3)
 run.plot()
 ```
 
@@ -52,6 +52,8 @@ run.plot()
 start of the file, and the returned run is shifted to start at 0. Run attributes
 are numpy arrays: `times`, `watts`, `speeds` (measured), `calc_speeds`
 (simulated), and `distances` and `cadences` when read from a TCX file.
+`smooth_window` is the number of samples to average across when loading
+the data to reduce noise in the data
 
 To build a run from arrays:
 
@@ -112,6 +114,10 @@ run = hv.Run("ride.tcx", rider_mass=75)
 
 Fitting several parameters to one short run is poorly constrained. Use
 several runs, or fix some parameters with `free`.
+
+The following figure was produced when running `vehicle_param_fit.py`
+
+![Fit quality](docs/fitpng)
 
 ### Fit a rider's physiological models
 
