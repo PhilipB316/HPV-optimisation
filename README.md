@@ -117,7 +117,7 @@ several runs, or fix some parameters with `free`.
 
 The following figure was produced when running `vehicle_param_fit.py`
 
-![Fit quality](docs/fitpng)
+![Fit quality](docs/fit.png)
 
 ### Fit a rider's physiological models
 
