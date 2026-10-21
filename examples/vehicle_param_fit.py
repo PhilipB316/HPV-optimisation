@@ -15,38 +15,28 @@
 
 import hpvopt as hv
 
-mmp_times = [1, 2, 5, 10, 20, 30, 60, 120, 300, 600, 1200, 1800, 3600]
-mmp_watts = [1288, 1278, 1268, 1218, 792, 558, 477, 296, 244, 242, 228, 220, 204]
-
 vehicle = hv.Vehicle(rider_mass=80, bike_mass=55, cda=0.030, crr=0.008,
                      air_density=1.2, slope=-0/150, wind=0)
 
-run1 = hv.Run("../../data/20261019_Clint_KakahiShell_02.tcx",
+run1 = hv.Run("./data/sample_data_2.tcx",
               start=200, end=423, smooth_window=3)
-run2 = hv.Run("../../data/20261019_Clint_KakahiShell_02.tcx",
+
+run1.to_csv("./data/run_1.csv")
+
+run2 = hv.Run("./data/sample_data_2.tcx",
               start=920, end=1192, smooth_window=3)
-run3 = hv.Run("../../data/20261019_Clint_KakahiShell.tcx",
+run3 = hv.Run("./data/sample_data_1.tcx",
               end=250, smooth_window=3)
-run4 = hv.Run("../../data/20261019_Clint_KakahiShell.tcx",
+run4 = hv.Run("./data/sample_data_1.tcx",
               start=520,end=765, smooth_window=3)
 
-# sim = vehicle.simulate(run1)
-# sim.plot()
-# sim = vehicle.simulate(run2)
-# sim.plot()
+kakahi = vehicle.fit([run1, run2, run3, run4])
 
-fitted_vehicle = vehicle.fit([run1, run2, run3, run4])
-# fitted_vehicle = fitted_vehicle.fit([run1, run2, run4], free=('cda',))
-fitted_vehicle = fitted_vehicle.fit([run4], free=('cda',))
+print(kakahi)
+print("Power at 100 km/hr:", kakahi.total_power_consumed(100))
 
-print(fitted_vehicle)
-print("power at 100 km/hr")
-print(fitted_vehicle.total_power_consumed(100))
+kakahi.simulate(run1).plot()
+kakahi.simulate(run2).plot()
+kakahi.simulate(run3).plot()
+kakahi.simulate(run4).plot()
 
-fitted_vehicle.simulate(run1).plot()
-fitted_vehicle.simulate(run2).plot()
-fitted_vehicle.simulate(run3).plot()
-fitted_vehicle.simulate(run4).plot()
-
-run3.to_csv("../../data/run3.csv")
-run4.to_csv("../../data/run4.csv")
