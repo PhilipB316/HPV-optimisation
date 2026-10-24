@@ -32,10 +32,13 @@ run4 = hv.Run("./data/sample_data_1.tcx",
 
 kakahi = vehicle.fit([run1, run2, run3, run4])
 
+kakahi = hv.Vehicle(rider_mass=80, bike_mass=55, cda=0.030, crr=0.003,
+                     air_density=1.1, slope=-0/150, wind=0)
+
 print(kakahi)
 print("Power at 100 km/hr:", kakahi.total_power_consumed(100))
 
-kakahi.simulate(run1).plot(savefig="../docs/fit.png")
+kakahi.simulate(run1).plot()
 kakahi.simulate(run2).plot()
 kakahi.simulate(run3).plot()
 kakahi.simulate(run4).plot()

@@ -9,6 +9,8 @@ __pycache__/
 # CMA-ES generated output
 examples/outcmaes/
 
+examples/data/record_run.tcx
+
 # Profiling / generated data
 examples/profile.npz
 
