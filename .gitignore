@@ -8,6 +8,7 @@ __pycache__/
 
 # CMA-ES generated output
 examples/outcmaes/
+examples/analysis.py
 
 examples/data/record_run.tcx
 
