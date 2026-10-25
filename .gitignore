@@ -11,6 +11,8 @@ examples/outcmaes/
 examples/analysis.py
 
 examples/data/record_run.tcx
+examples/data/last_year.tcx
+examples/data/last_year_distances.tcx
 
 # Profiling / generated data
 examples/profile.npz

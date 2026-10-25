@@ -189,3 +189,9 @@ class Run:
         """
         return plotting.plot(self, *others, **kwargs)
 
+    def get_w_expenditure(self, ftp):
+        """Energy above FTP in joules (W' expended)."""
+        powers_above_ftp = np.maximum(0, self.watts - ftp)
+        return np.trapezoid(powers_above_ftp, self.times)
+
+
